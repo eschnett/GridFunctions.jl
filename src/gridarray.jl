@@ -148,3 +148,43 @@ Base.:*(α, ga::GridArray) = map(x -> α * x, ga)
 Base.:*(ga::GridArray, α) = map(x -> x * α, ga)
 Base.:\(α, ga::GridArray) = map(x -> α \ x, ga)
 Base.:/(ga::GridArray, α) = map(x -> x / α, ga)
+
+export load_openpmd
+function load_openpmd(filename::AbstractString, varname::AbstractString)
+    file = adios_open_serial(filename, mode_read)
+    varref = adios_get(file, varname)
+    @assert varref ≢ nothing
+    varpath = replace(varname, r"/[^/]*$" => s"")
+    gridGlobalOffset = adios_attribute_data(file, "$varpath/gridGlobalOffset")
+    @assert gridGlobalOffset ≢ nothing
+    gridSpacing = adios_attribute_data(file, "$varpath/gridSpacing")
+    @assert gridSpacing ≢ nothing
+    # TODO: ensure that geometry == "cartesian"
+    # TODO: ensure that dataOrder == "C"
+    position = adios_attribute_data(file, "$varname/position")
+    @assert position ≢ nothing
+    vardata = fetch(varref)
+    close(file)
+
+    @assert vardata isa AbstractArray
+    D = ndims(vardata)
+    T = eltype(vardata)
+    @assert gridGlobalOffset isa AbstractVector
+    @assert length(gridGlobalOffset) == D
+    S = eltype(gridGlobalOffset)
+    @assert gridSpacing isa AbstractVector
+    @assert length(gridSpacing) == D
+    @assert eltype(gridSpacing) == S
+    @assert position isa AbstractVector
+    @assert length(position) == D
+    @assert eltype(position) <: AbstractFloat
+
+    vardomain_lo = SVector{D,S}(gridGlobalOffset...)
+    vardomain_delta = SVector{D,S}(gridSpacing...)
+    vardomain_hi = vardomain_lo +
+                   (SVector{D,Int}(size(vardata)) .- 1) .* vardomain_delta
+    vardomain = Domain{S,D}(vardomain_lo, vardomain_hi)
+    varbbox = BBox{D}(fill(1, SVector{D,Int}), SVector{D,Int}(size(vardata)))
+    var_cell_centred = SVector{D}(position...) .≠ 0
+    return GridArray{S,T,D}(vardomain, varbbox, var_cell_centred, vardata)
+end

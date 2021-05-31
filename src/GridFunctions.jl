@@ -1,5 +1,6 @@
 module GridFunctions
 
+using ADIOS2
 using Random
 using StaticArrays
 using Test
