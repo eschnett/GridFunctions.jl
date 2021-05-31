@@ -47,13 +47,6 @@ function Base.map!(f, dest_ga::GridArray{S,R,D}, ga::GridArray{S,T,D} where {T},
     return dest_ga
 end
 
-function Base.map(f, ga::GridArray{S,T,D} where {T},
-                  gas::(GridArray{S,T,D} where {T})...) where {S,D}
-    resdata = map(f, ga.data, (ga.data for ga in gas)...)
-    R = eltype(resdata)
-    return GridArray{S,R,D}(ga.domain, ga.bbox, ga.cell_centered, resdata)
-end
-
 function Base.mapreduce(f, op, ga::GridArray{S,T,D} where {T},
                         gas::(GridArray{S,T,D} where {T})...; init) where {S,D}
     res = mapreduce(f, op, ga.data, (ga.data for ga in gas)...; init=init)
