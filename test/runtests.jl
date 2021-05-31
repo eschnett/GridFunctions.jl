@@ -2,12 +2,11 @@ using GridFunctions
 using StaticArrays
 using Test
 
-svector(D, x) = SVector(ntuple(_ -> x, D))
-
 @testset "GridArray D=$D" for D in 1:3
-    dom = Domain{Float64,D}(svector(D, 0), svector(D, 1))
-    bb = BBox{D}(svector(D, 0), svector(D, 10))
-    cc = svector(D, false)
+    dom = Domain{Float64,D}(fill(0, SVector{D,Float64}),
+                            fill(1, SVector{D,Float64}))
+    bb = BBox{D}(fill(0, SVector{D,Int}), fill(10, SVector{D,Int}))
+    cc = fill(false, SVector{D,Bool})
 
     ga = GridArray{Float64,Nothing,D}(dom, bb, cc,
                                       fill(nothing, Tuple(size(bb))))
