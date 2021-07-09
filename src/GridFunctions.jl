@@ -4,6 +4,7 @@ using ADIOS2
 using Random
 using StaticArrays
 using Test
+using openPMD
 
 ################################################################################
 
@@ -15,7 +16,8 @@ include("bboxset.jl")
 include("bboxarray.jl")
 
 include("abstract.jl")
-include("rectilinear.jl")
+include("mesh.jl")
+include("component.jl")
 
 include("gridarray.jl")
 

@@ -1,17 +1,39 @@
 # AbstractGridFunction
 
 export AbstractGridFunction
+"""
+    abstract type AbstractGridFunction{S,T,D} end
+
+An abstract grid function with domain `S` and codomain `T` in dimension `D`.
+
+    AbstractGridFunction
+    AbstractGridHierarchy
+    AbstractGridMesh
+    AbstractGridComponent
+"""
 abstract type AbstractGridFunction{S,T,D} end
 
 Base.ndims(::AbstractGridFunction{S,T,D} where {S,T}) where {D} = D
 
-export indextype
-indextype(::AbstractGridFunction{S}) where {S} = S
+Base.keytype(::AbstractGridFunction{S,T,D}) where {S,T,D} = SVector{D,S}
 
 Base.eltype(::AbstractGridFunction{S,T}) where {S,T} = T
 
 export domain
 domain(::AbstractGridFunction) = error("undefined method")
+
+Base.zero(::AbstractGridFunction) = error("undefined method")
+Base.:+(::AbstractGridFunction) = error("undefined method")
+Base.:-(::AbstractGridFunction) = error("undefined method")
+Base.:+(::AbstractGridFunction{S,T,D} where {T}, ::AbstractGridFunction{S,T,D} where {T}) where {S,D} = error("undefined method")
+Base.:-(::AbstractGridFunction{S,T,D} where {T}, ::AbstractGridFunction{S,T,D} where {T}) where {S,D} = error("undefined method")
+Base.:*(::Number, ::AbstractGridFunction) = error("undefined method")
+Base.:*(::AbstractGridFunction, ::Number) = error("undefined method")
+Base.:\(::Number, ::AbstractGridFunction) = error("undefined method")
+Base.:/(::AbstractGridFunction, ::Number) = error("undefined method")
+
+export evaluate
+evaluate(::AbstractGridFunction{S,T,D}, ::SVector{D,S}) where {S,T,D} = error("undefined method")
 
 export test_AbstractGridFunction
 function test_AbstractGridFunction(gf::AbstractGridFunction)
@@ -20,16 +42,17 @@ function test_AbstractGridFunction(gf::AbstractGridFunction)
         @test D isa Int
         @test D ≥ 0
 
-        S = indextype(gf)
+        @test keytype(gf) <: AbstractArray
+        S = eltype(keytype(gf))
         @test S isa Type
 
         T = eltype(gf)
         @test T isa Type
 
-        dom = domain(gf)
-        @test dom isa Domain
-        @test ndims(dom) == D
-        @test eltype(dom) == S
+        gfdomain = domain(gf)
+        @test gfdomain isa Domain
+        @test ndims(gfdomain) == D
+        @test eltype(gfdomain) == S
 
         len = length(gf)
         @test len isa Int
@@ -42,7 +65,7 @@ function test_AbstractGridFunction(gf::AbstractGridFunction)
 
             function test_props(gf)
                 @test gf isa AbstractGridFunction
-                @test indextype(gf) == S
+                @test eltype(keytype(gf)) == S
                 @test eltype(gf) == T
                 @test ndims(gf) == D
             end
@@ -86,8 +109,7 @@ function test_AbstractGridFunction(gf::AbstractGridFunction)
             test_props(z)
 
             @test map(identity, y) == y
-            @test map(a -> a .+ 1, map(a -> 2a, y)) ≈
-                  map((a -> a .+ 1) ∘ (a -> 2a), y)
+            @test map(a -> a .+ 1, map(a -> 2a, y)) ≈ map((a -> a .+ 1) ∘ (a -> 2a), y)
 
             @test +x == x
             @test n + x == x
@@ -115,6 +137,14 @@ function test_AbstractGridFunction(gf::AbstractGridFunction)
                 @test a \ x ≈ inv(a) * x
                 @test x / a ≈ x * inv(a)
             end
+        end
+
+        T = eltype(gf)
+        for n in 1:10
+            x = map((a, b) -> (a + b) / 2 + (b - a) / 2 * (2 * rand(S) - 1), min(gfdomain), max(gfdomain))
+            @test x isa SVector{D,S}
+            fx = evaluate(gf, x)
+            @test fx isa T
         end
     end
 end

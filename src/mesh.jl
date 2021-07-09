@@ -1,16 +1,19 @@
-# RectilinearGridFunction
+# AbstractGridMesh
 
-export RectilinearGridFunction
-abstract type RectilinearGridFunction{S,T,D} <: AbstractGridFunction{S,T,D} end
+export AbstractGridMesh
+"""
+    abstract type AbstractGridMesh{S,T,D} <: AbstractGridFunction{S,T,D} end
+"""
+abstract type AbstractGridMesh{S,T,D} <: AbstractGridFunction{S,T,D} end
 
 export bbox
-bbox(::RectilinearGridFunction) = error("undefined")
+bbox(::AbstractGridMesh) = error("undefined")
 
-export test_RectilinearGridFunction
-function test_RectilinearGridFunction(gf::RectilinearGridFunction)
+export test_AbstractGridMesh
+function test_AbstractGridMesh(gf::AbstractGridMesh)
     test_AbstractGridFunction(gf)
 
-    @testset "$(typeof(gf)) <: RectilinearGridFunction" begin
+    @testset "$(typeof(gf)) <: AbstractGridMesh" begin
         D = ndims(gf)
         gfbbox = bbox(gf)
         @test gfbbox isa BBox{D}

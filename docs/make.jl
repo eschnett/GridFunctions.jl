@@ -6,8 +6,6 @@ push!(LOAD_PATH, "..")
 using Documenter
 using GridFunctions
 
-makedocs(; sitename="GridFunctions", format=Documenter.HTML(),
-         modules=[GridFunctions])
+makedocs(; sitename="GridFunctions", format=Documenter.HTML(), modules=[GridFunctions])
 
-deploydocs(; repo="github.com/eschnett/GridFunctions.jl.git", devbranch="main",
-           push_preview=true)
+deploydocs(; repo="github.com/eschnett/GridFunctions.jl.git", devbranch="main", push_preview=true)
